@@ -1,1 +1,10 @@
-
+{
+  "manifest_version": 3,
+  "name": "Website Reliability Checker",
+  "version": "1.0",
+  "description": "Checks a website score from preset data.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Reliability Checker"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "PhishItOut",
+  "version": "1.1",
+  "description": "Check website safety and report suspicious sites.",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "PhishItOut"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
+}

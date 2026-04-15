@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishItOut — Website Safety Checker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">PhishItOut</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="report.html">Report a Site</a>
+            <a href="learn.html">Learn</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Is this website safe?</h1>
+        <p>Paste any URL and see its risk score before you click.</p>
+        <div class="search-box">
+            <input type="text" id="urlInput" placeholder="e.g. example.com" />
+            <button onclick="checkSite()">Check Website</button>
+        </div>
+        <div id="results" class="results-box hidden"></div>
+    </div>
+
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Instant URL Check</h3>
+                <p>Enter any domain and get a reliability score pulled from multiple threat detection sources.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Clear Risk Rating</h3>
+                <p>Results are easy to read — no confusing jargon, just a score and a plain-English summary.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚩</div>
+                <h3>Community Reporting</h3>
+                <p>Found something suspicious? Flag it so others can be warned before they make the same mistake.</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

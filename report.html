@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishItOut — Report a Site</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">PhishItOut</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="report.html">Report a Site</a>
+            <a href="learn.html">Learn</a>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <h1>Report a Suspicious Site</h1>
+        <p>Not every threat gets caught automatically. Your reports help fill in the gaps.</p>
+    </div>
+
+    <div class="form-wrap">
+        <div class="form-box">
+
+            <div class="form-group">
+                <label for="reportUrl">Website URL</label>
+                <input type="text" id="reportUrl" placeholder="e.g. sketchy-site.com" />
+            </div>
+
+            <div class="form-group">
+                <label for="reportType">Why does it seem suspicious?</label>
+                <select id="reportType">
+                    <option value="">-- Select a reason --</option>
+                    <option value="phishing">Looks like a phishing page</option>
+                    <option value="malware">Possible malware or virus</option>
+                    <option value="scam">Scam or fake store</option>
+                    <option value="impersonation">Impersonating a real website</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="reportDetails">Additional details (optional)</label>
+                <textarea id="reportDetails" placeholder="Describe what made this site feel off..."></textarea>
+            </div>
+
+            <button class="submit-btn" onclick="submitReport()">Submit Report</button>
+
+            <div id="reportConfirm" class="hidden"></div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

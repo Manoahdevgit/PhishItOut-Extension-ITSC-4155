@@ -1,10 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Website Reliability Checker",
+  "name": "PhishItOut",
   "version": "1.0",
-  "description": "Checks a website score from preset data.",
+  "description": "Check website safety and report suspicious sites.",
   "action": {
-    "default_popup": "popup.html",
-    "default_title": "Reliability Checker"
-  }
+    "default_popup": "index.html",
+    "default_title": "PhishItOut"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
 }

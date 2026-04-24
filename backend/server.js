@@ -20,7 +20,10 @@ app.use(express.json());
 
 // Serve the frontend (index.html, report.html, learn.html, script.js,
 // styles.css, etc.) from the repo root, which is one level up from /backend.
-const FRONTEND_DIR = path.join(__dirname, '..');
+const fs = require('fs');
+const FRONTEND_DIR = fs.existsSync(path.join(__dirname, '..', 'index.html'))
+  ? path.join(__dirname, '..')
+  : path.join(__dirname, 'public');
 app.use(express.static(FRONTEND_DIR));
 
 // Rate limiter (5 requests per hour per IP) on /report only

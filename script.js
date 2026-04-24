@@ -8,42 +8,51 @@ const siteData = {
 };
 
 function checkSite() {
-    const input = document.getElementById("urlInput").value.trim().toLowerCase();
-    const resultsBox = document.getElementById("results");
+  const input = document.getElementById("urlInput").value;
+  const resultsBox = document.getElementById("results");
 
-    if (!input) {
-        resultsBox.className = "results-box";
-        resultsBox.innerHTML = `<p class="result-no-data">Please enter a website to check.</p>`;
+  if (!input) {
+    alert("Please enter a URL");
+    return;
+  }
+
+  // Normalize URL (simple version)
+  const url = input.startsWith("http") ? input : "https://" + input;
+
+  loadReports(url);
+
+  fetch(`http://localhost:3000/reports?url=${url}`)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+
+      resultsBox.classList.remove("hidden");
+
+      if (data.length === 0) {
+        resultsBox.innerHTML = `
+          <p><strong>No reports found</strong></p>
+          <p>This site has not been flagged yet.</p>
+        `;
         return;
-    }
+      }
 
-    const site = siteData[input];
+      // Simple "risk score" = number of reports
+      const reportCount = data.length;
 
-    if (site) {
-        const barWidth = site.score + "%";
-        const riskLabel = site.risk === "low" ? "Safe" : site.risk === "medium" ? "Caution" : "Dangerous";
+      let riskLevel = "Low";
+      if (reportCount >= 3) riskLevel = "Medium";
+      if (reportCount >= 5) riskLevel = "High";
 
-        resultsBox.className = `results-box risk-${site.risk}`;
-        resultsBox.innerHTML = `
-            <p class="result-domain">${input}</p>
-            <div class="result-score-row">
-                <span class="score">${site.score}</span>
-                <span class="risk-label">${riskLabel}</span>
-            </div>
-            <div class="risk-bar-wrap">
-                <div class="risk-bar-track">
-                    <div class="risk-bar-fill" style="width: ${barWidth}"></div>
-                </div>
-            </div>
-            <p class="result-notes">${site.notes}</p>
-        `;
-    } else {
-        resultsBox.className = "results-box";
-        resultsBox.innerHTML = `
-            <p class="result-domain">${input}</p>
-            <p class="result-no-data">No data on file for this site yet. If it seems suspicious, consider reporting it.</p>
-        `;
-    }
+      resultsBox.innerHTML = `
+        <p><strong>Reports found:</strong> ${reportCount}</p>
+        <p><strong>Risk level:</strong> ${riskLevel}</p>
+      `;
+    })
+    .catch(err => {
+      console.error(err);
+      resultsBox.classList.remove("hidden");
+      resultsBox.innerHTML = `<p>Error checking site</p>`;
+    });
 }
 
 // Allow pressing Enter to trigger the check
@@ -55,6 +64,7 @@ document.getElementById("urlInput").addEventListener("keydown", function(e) {
 function submitReport() {
     const url = document.getElementById("reportUrl").value.trim();
     const type = document.getElementById("reportType").value;
+    const details = document.getElementById("reportDetails").value.trim();
     const confirm = document.getElementById("reportConfirm");
 
     if (!url || !type) {
@@ -63,7 +73,57 @@ function submitReport() {
         return;
     }
 
-    // Show success 
-    confirm.className = "confirm-message";
-    confirm.innerHTML = "Report received. Thanks for helping keep people safe.";
+    // Combine type and details into report text
+    let reportText = type;
+    if (details) {
+        reportText += ": " + details;
+    }
+
+    // Send to server
+    fetch('http://localhost:3000/report', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            url: url,
+            report: reportText
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            confirm.className = "confirm-message";
+            confirm.innerHTML = "Report received. Thanks for helping keep people safe.";
+            // Clear form
+            document.getElementById("reportUrl").value = "";
+            document.getElementById("reportType").value = "";
+            document.getElementById("reportDetails").value = "";
+        } else {
+            confirm.className = "error-message";
+            confirm.innerHTML = "Error submitting report: " + (data.error || "Unknown error");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        confirm.className = "error-message";
+        confirm.innerHTML = "Error submitting report. Please try again.";
+    });
+}
+
+function loadReports(url) {
+  fetch(`http://localhost:3000/reports?url=${url}`)
+    .then(res => res.json())
+    .then(data => {
+      console.log("Reports:", data);
+
+      const container = document.getElementById("reportsContainer");
+      container.innerHTML = "";
+
+      data.forEach(r => {
+        const div = document.createElement("div");
+        div.textContent = r.report;
+        container.appendChild(div);
+      });
+    });
 }

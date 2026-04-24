@@ -1,29 +1,52 @@
 {
-  "name": "phishitout-extension-itsc-4155",
+  "name": "phishitout-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "popup.js",
+  "description": "Backend for PhishItOut — serves the API and the static frontend",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Manoahdevgit/PhishItOut-Extension-ITSC-4155.git"
+  "engines": {
+    "node": "20.x"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Manoahdevgit/PhishItOut-Extension-ITSC-4155/issues"
-  },
-  "homepage": "https://github.com/Manoahdevgit/PhishItOut-Extension-ITSC-4155#readme",
   "dependencies": {
-    "axios": "^1.15.2",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.4.0",
-    "sqlite3": "^6.0.1"
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "sqlite3": "^5.1.7"
   }
 }
+
+// {
+//   "name": "phishitout-extension-itsc-4155",
+//   "version": "1.0.0",
+//   "description": "",
+//   "main": "popup.js",
+//   "scripts": {
+//     "test": "echo \"Error: no test specified\" && exit 1"
+//   },
+//   "repository": {
+//     "type": "git",
+//     "url": "git+https://github.com/Manoahdevgit/PhishItOut-Extension-ITSC-4155.git"
+//   },
+//   "keywords": [],
+//   "author": "",
+//   "license": "ISC",
+//   "type": "commonjs",
+//   "bugs": {
+//     "url": "https://github.com/Manoahdevgit/PhishItOut-Extension-ITSC-4155/issues"
+//   },
+//   "homepage": "https://github.com/Manoahdevgit/PhishItOut-Extension-ITSC-4155#readme",
+//   "dependencies": {
+//     "axios": "^1.15.2",
+//     "cors": "^2.8.6",
+//     "dotenv": "^17.4.2",
+//     "express": "^5.2.1",
+//     "express-rate-limit": "^8.4.0",
+//     "sqlite3": "^6.0.1"
+//   }
+// }
+
+

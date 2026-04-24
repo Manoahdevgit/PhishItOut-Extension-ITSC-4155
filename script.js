@@ -1,3 +1,9 @@
+// API base URL. Empty string = "same origin as this page", which is
+// what we want now that the backend serves this file too.
+// For local dev where you might run frontend separately, change to
+// "http://localhost:3000".
+const API_BASE = "";
+
 async function checkSite() {
   const inputEl = document.getElementById("urlInput");
   const resultsBox = document.getElementById("results");
@@ -6,44 +12,42 @@ async function checkSite() {
 
   const input = inputEl.value.trim();
 
-  // 🔴 Validate input
   if (!input) {
     alert("Please enter a URL");
     return;
   }
 
-  // 🔧 Normalize URL
+  // Normalize URL
   const url = input.startsWith("http") ? input : "https://" + input;
 
-  if (!vtBox) {
-  console.warn("vtResults element missing");
-  return;
-}
-
-  // 🟡 Show loading states immediately
+  // Show loading states (and reveal the boxes)
   resultsBox.classList.remove("hidden");
   resultsBox.innerHTML = "<p>Loading site data...</p>";
-  vtBox.innerHTML = "<p>Checking VirusTotal...</p>";
-  reportsContainer.innerHTML = "<p>Loading reports...</p>";
+
+  if (vtBox) {
+    vtBox.classList.remove("hidden");
+    vtBox.innerHTML = "<p>Checking VirusTotal...</p>";
+  }
+  if (reportsContainer) {
+    reportsContainer.classList.remove("hidden");
+    reportsContainer.innerHTML = "<p>Loading reports...</p>";
+  }
 
   try {
-    // ⚡ Run BOTH requests in parallel
+    // Run BOTH requests in parallel
     const [reportsRes, vtRes] = await Promise.all([
-      fetch(`http://localhost:3000/reports?url=${encodeURIComponent(url)}`),
-      fetch(`http://localhost:3000/vt-report?url=${encodeURIComponent(url)}`)
+      fetch(`${API_BASE}/reports?url=${encodeURIComponent(url)}`),
+      fetch(`${API_BASE}/vt-report?url=${encodeURIComponent(url)}`)
     ]);
 
-    // 🔴 Check for HTTP errors
     if (!reportsRes.ok) throw new Error("Failed to fetch reports");
-    if (!vtRes.ok) throw new Error("Failed to fetch VirusTotal data");
 
     const reportsData = await reportsRes.json();
-    const vtData = await vtRes.json();
+    // Don't throw on a VT failure — just show "unavailable" for that panel
+    const vtData = vtRes.ok ? await vtRes.json() : null;
 
-    // =========================
-    // 📊 RENDER REPORTS SUMMARY
-    // =========================
-    const reportCount = reportsData.length;
+    // === Reports summary ===
+    const reportCount = Array.isArray(reportsData) ? reportsData.length : 0;
 
     let riskLevel = "Low";
     if (reportCount >= 3) riskLevel = "Medium";
@@ -61,40 +65,41 @@ async function checkSite() {
       `;
     }
 
-    // =========================
-    // 🧾 RENDER USER REPORTS
-    // =========================
+    // === User reports list ===
     renderReports(reportsData);
 
-    // =========================
-    // 🛡️ RENDER VIRUSTOTAL DATA
-    // =========================
-    if (vtData.pending) {
-      vtBox.innerHTML = `<p>${vtData.message}</p>`;
-    } else if (vtData?.data?.attributes?.last_analysis_stats) {
-      const stats = vtData.data.attributes.last_analysis_stats;
-
-      vtBox.innerHTML = `
-        <p><strong>VirusTotal:</strong></p>
-        <p>Malicious: ${stats.malicious}</p>
-        <p>Suspicious: ${stats.suspicious}</p>
-      `;
-    } else {
-      vtBox.innerHTML = `<p>No VirusTotal data available.</p>`;
+    // === VirusTotal panel ===
+    if (vtBox) {
+      if (!vtData) {
+        vtBox.innerHTML = `<p>VirusTotal data unavailable.</p>`;
+      } else if (vtData.pending) {
+        vtBox.innerHTML = `<p>${vtData.message}</p>`;
+      } else if (vtData?.data?.attributes?.last_analysis_stats) {
+        const stats = vtData.data.attributes.last_analysis_stats;
+        vtBox.innerHTML = `
+          <p><strong>VirusTotal:</strong></p>
+          <p>Malicious: ${stats.malicious}</p>
+          <p>Suspicious: ${stats.suspicious}</p>
+          <p>Harmless: ${stats.harmless}</p>
+          <p>Undetected: ${stats.undetected}</p>
+        `;
+      } else {
+        vtBox.innerHTML = `<p>No VirusTotal data available.</p>`;
+      }
     }
 
   } catch (err) {
-    // 🔴 Global error handling
     console.error(err);
-
     resultsBox.innerHTML = `<p>Error checking site</p>`;
-    vtBox.innerHTML = `<p>Error loading VirusTotal data</p>`;
-    reportsContainer.innerHTML = `<p>Error loading reports</p>`;
+    if (vtBox) vtBox.innerHTML = `<p>Error loading VirusTotal data</p>`;
+    if (reportsContainer) reportsContainer.innerHTML = `<p>Error loading reports</p>`;
   }
 }
 
 function renderReports(data) {
   const container = document.getElementById("reportsContainer");
+  if (!container) return;
+
   container.innerHTML = "";
 
   if (!data || data.length === 0) {
@@ -109,75 +114,52 @@ function renderReports(data) {
   });
 }
 
-// Allow pressing Enter to trigger the check
-document.getElementById("urlInput").addEventListener("keydown", function(e) {
+// Allow pressing Enter to trigger the check — guarded so this script
+// doesn't crash on report.html / learn.html where #urlInput doesn't exist.
+const urlInputEl = document.getElementById("urlInput");
+if (urlInputEl) {
+  urlInputEl.addEventListener("keydown", function (e) {
     if (e.key === "Enter") checkSite();
-});
+  });
+}
 
 // Handles the report form submission
 function submitReport() {
-    const url = document.getElementById("reportUrl").value.trim();
-    const type = document.getElementById("reportType").value;
-    const details = document.getElementById("reportDetails").value.trim();
-    const confirm = document.getElementById("reportConfirm");
+  const url = document.getElementById("reportUrl").value.trim();
+  const type = document.getElementById("reportType").value;
+  const details = document.getElementById("reportDetails").value.trim();
+  const confirmEl = document.getElementById("reportConfirm");
 
-    if (!url || !type) {
-        confirm.className = "error-message";
-        confirm.innerHTML = "Please fill in the URL and select a reason before submitting.";
-        return;
-    }
+  if (!url || !type) {
+    confirmEl.className = "error-message";
+    confirmEl.innerHTML = "Please fill in the URL and select a reason before submitting.";
+    return;
+  }
 
-    // Combine type and details into report text
-    let reportText = type;
-    if (details) {
-        reportText += ": " + details;
-    }
+  let reportText = type;
+  if (details) reportText += ": " + details;
 
-    // Send to server
-    fetch('http://localhost:3000/report', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            url: url,
-            report: reportText
-        })
-    })
+  fetch(`${API_BASE}/report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, report: reportText })
+  })
     .then(res => res.json())
     .then(data => {
-        if (data.success) {
-            confirm.className = "confirm-message";
-            confirm.innerHTML = "Report received. Thanks for helping keep people safe.";
-            // Clear form
-            document.getElementById("reportUrl").value = "";
-            document.getElementById("reportType").value = "";
-            document.getElementById("reportDetails").value = "";
-        } else {
-            confirm.className = "error-message";
-            confirm.innerHTML = "Error submitting report: " + (data.error || "Unknown error");
-        }
+      if (data.success) {
+        confirmEl.className = "confirm-message";
+        confirmEl.innerHTML = "Report received. Thanks for helping keep people safe.";
+        document.getElementById("reportUrl").value = "";
+        document.getElementById("reportType").value = "";
+        document.getElementById("reportDetails").value = "";
+      } else {
+        confirmEl.className = "error-message";
+        confirmEl.innerHTML = "Error submitting report: " + (data.error || "Unknown error");
+      }
     })
     .catch(err => {
-        console.error(err);
-        confirm.className = "error-message";
-        confirm.innerHTML = "Error submitting report. Please try again.";
-    });
-}
-
-function loadReports(url) {
-  fetch(`http://localhost:3000/reports?url=${url}`)
-    .then(res => res.json())
-    .then(data => {
-      console.log("Reports:", data);
-
-      const container = document.getElementById("reportsContainer");
-      container.innerHTML = "";
-
-      data.forEach(r => {
-        const div = document.createElement("div");
-        div.textContent = r.report;
-        container.appendChild(div);
-      });
+      console.error(err);
+      confirmEl.className = "error-message";
+      confirmEl.innerHTML = "Error submitting report. Please try again.";
     });
 }

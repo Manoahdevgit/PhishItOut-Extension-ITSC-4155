@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -73,4 +75,22 @@ app.get('/reports', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+const { getVirusTotalReport } = require("./virustotal");
+
+app.get("/vt-report", async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ error: "Missing URL" });
+  }
+
+  const data = await getVirusTotalReport(url);
+
+  if (!data) {
+    return res.status(500).json({ error: "VirusTotal request failed" });
+  }
+
+  res.json(data);
 });

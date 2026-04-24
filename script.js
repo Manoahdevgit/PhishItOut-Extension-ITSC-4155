@@ -1,58 +1,112 @@
-// Placeholder site data until the real API is connected
-const siteData = {
-    "google.com":       { score: 95, risk: "low",    notes: "Well-established site with no known threats detected." },
-    "facebook.com":     { score: 88, risk: "low",    notes: "Large platform, generally considered safe." },
-    "cnn.com":          { score: 78, risk: "low",    notes: "Known news outlet, no major threats found." },
-    "foxnews.com":      { score: 72, risk: "medium", notes: "Some trackers detected. No direct threats, but proceed with awareness." },
-    "example-scam.com": { score: 12, risk: "high",   notes: "Multiple threat detectors flagged this site. Avoid entering any personal information." }
-};
-
-function checkSite() {
-  const input = document.getElementById("urlInput").value;
+async function checkSite() {
+  const inputEl = document.getElementById("urlInput");
   const resultsBox = document.getElementById("results");
+  const vtBox = document.getElementById("vtResults");
+  const reportsContainer = document.getElementById("reportsContainer");
 
+  const input = inputEl.value.trim();
+
+  // 🔴 Validate input
   if (!input) {
     alert("Please enter a URL");
     return;
   }
 
-  // Normalize URL (simple version)
+  // 🔧 Normalize URL
   const url = input.startsWith("http") ? input : "https://" + input;
 
-  loadReports(url);
+  if (!vtBox) {
+  console.warn("vtResults element missing");
+  return;
+}
 
-  fetch(`http://localhost:3000/reports?url=${url}`)
-    .then(res => res.json())
-    .then(data => {
-      console.log(data);
+  // 🟡 Show loading states immediately
+  resultsBox.classList.remove("hidden");
+  resultsBox.innerHTML = "<p>Loading site data...</p>";
+  vtBox.innerHTML = "<p>Checking VirusTotal...</p>";
+  reportsContainer.innerHTML = "<p>Loading reports...</p>";
 
-      resultsBox.classList.remove("hidden");
+  try {
+    // ⚡ Run BOTH requests in parallel
+    const [reportsRes, vtRes] = await Promise.all([
+      fetch(`http://localhost:3000/reports?url=${encodeURIComponent(url)}`),
+      fetch(`http://localhost:3000/vt-report?url=${encodeURIComponent(url)}`)
+    ]);
 
-      if (data.length === 0) {
-        resultsBox.innerHTML = `
-          <p><strong>No reports found</strong></p>
-          <p>This site has not been flagged yet.</p>
-        `;
-        return;
-      }
+    // 🔴 Check for HTTP errors
+    if (!reportsRes.ok) throw new Error("Failed to fetch reports");
+    if (!vtRes.ok) throw new Error("Failed to fetch VirusTotal data");
 
-      // Simple "risk score" = number of reports
-      const reportCount = data.length;
+    const reportsData = await reportsRes.json();
+    const vtData = await vtRes.json();
 
-      let riskLevel = "Low";
-      if (reportCount >= 3) riskLevel = "Medium";
-      if (reportCount >= 5) riskLevel = "High";
+    // =========================
+    // 📊 RENDER REPORTS SUMMARY
+    // =========================
+    const reportCount = reportsData.length;
 
+    let riskLevel = "Low";
+    if (reportCount >= 3) riskLevel = "Medium";
+    if (reportCount >= 5) riskLevel = "High";
+
+    if (reportCount === 0) {
+      resultsBox.innerHTML = `
+        <p><strong>No reports found</strong></p>
+        <p>This site has not been flagged yet.</p>
+      `;
+    } else {
       resultsBox.innerHTML = `
         <p><strong>Reports found:</strong> ${reportCount}</p>
         <p><strong>Risk level:</strong> ${riskLevel}</p>
       `;
-    })
-    .catch(err => {
-      console.error(err);
-      resultsBox.classList.remove("hidden");
-      resultsBox.innerHTML = `<p>Error checking site</p>`;
-    });
+    }
+
+    // =========================
+    // 🧾 RENDER USER REPORTS
+    // =========================
+    renderReports(reportsData);
+
+    // =========================
+    // 🛡️ RENDER VIRUSTOTAL DATA
+    // =========================
+    if (vtData.pending) {
+      vtBox.innerHTML = `<p>${vtData.message}</p>`;
+    } else if (vtData?.data?.attributes?.last_analysis_stats) {
+      const stats = vtData.data.attributes.last_analysis_stats;
+
+      vtBox.innerHTML = `
+        <p><strong>VirusTotal:</strong></p>
+        <p>Malicious: ${stats.malicious}</p>
+        <p>Suspicious: ${stats.suspicious}</p>
+      `;
+    } else {
+      vtBox.innerHTML = `<p>No VirusTotal data available.</p>`;
+    }
+
+  } catch (err) {
+    // 🔴 Global error handling
+    console.error(err);
+
+    resultsBox.innerHTML = `<p>Error checking site</p>`;
+    vtBox.innerHTML = `<p>Error loading VirusTotal data</p>`;
+    reportsContainer.innerHTML = `<p>Error loading reports</p>`;
+  }
+}
+
+function renderReports(data) {
+  const container = document.getElementById("reportsContainer");
+  container.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    container.innerHTML = "<p>No user reports yet.</p>";
+    return;
+  }
+
+  data.forEach(r => {
+    const div = document.createElement("div");
+    div.textContent = r.report;
+    container.appendChild(div);
+  });
 }
 
 // Allow pressing Enter to trigger the check

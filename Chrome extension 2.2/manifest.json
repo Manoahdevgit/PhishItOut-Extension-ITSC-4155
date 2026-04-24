@@ -3,13 +3,21 @@
   "name": "PhishItOut",
   "version": "1.1",
   "description": "Check website safety and report suspicious sites.",
+
   "action": {
     "default_popup": "index.html",
     "default_title": "PhishItOut"
   },
-  "permissions": ["storage"],
+
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
+
   "host_permissions": [
     "https://*/*",
-    "http://*/*"
+    "http://*/*",
+    "http://localhost:3000/*"
   ]
 }

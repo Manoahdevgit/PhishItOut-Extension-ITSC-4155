@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishItOut — Detect</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">PhishItOut</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="detect.html">Detect</a>
+            <a href="report.html">Report a Site</a>
+            <a href="learn.html">Learn</a>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <h1>Detect Current Site</h1>
+        <p>PhishItOut checks the website you are currently viewing.</p>
+    </div>
+
+    <div class="learn-wrap">
+        <div class="card detect-card">
+            <div class="card-icon">🔍</div>
+
+            <h2 id="currentSite">Checking current site...</h2>
+
+            <p id="detectStatus">
+                Please wait while we analyze this page.
+            </p>
+
+            <div id="results" class="results-box hidden"></div>
+        </div>
+    </div>
+
+    <script src="detect.js"></script>
+
+</body>
+</html>

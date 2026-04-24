@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: phishitout
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: VT_API_KEY
+        sync: false
